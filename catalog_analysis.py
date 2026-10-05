@@ -87,6 +87,42 @@ def duration_in_hours(minutes: int) -> str:
     leftover_minutes = minutes % 60
     return f"{hours}ч {leftover_minutes}м"
 
+def rating_tier(rating: float) -> str:
+    """Return the Russian tier label for a movie rating.
+ 
+    Args:
+        rating: A movie's rating (typically 0-10).
+ 
+    Returns:
+        "шедевр" for rating >= 9, "хорошо" for 7 <= rating < 9,
+        "средне" for 5 <= rating < 7, and "слабо" for rating < 5.
+    """
+    if rating >= 9:
+        return "шедевр"
+    elif rating >= 5:
+        return "хорошо" if rating >= 7 else "средне" 
+    else:
+        return "слабо"
+ 
+ 
+def decade_label(year: int) -> str:
+    """Classify a release year as new, recent, or old.
+ 
+    Args:
+        year: A movie's release year.
+ 
+    Returns:
+        "новые" for years after 2020, "недавние" for 2015-2020
+        inclusive, and "старые" for years before 2015.
+    """
+    match year:
+        case _ if year > 2020:
+            return "новые"
+        case _ if 2015 <= year <= 2020:
+            return "недавние"
+        case _:
+            return "старые"
+ 
 
 def build_report(movies: list[dict]) -> None:
     """Print the full console report for the movie catalog.
@@ -100,7 +136,16 @@ def build_report(movies: list[dict]) -> None:
     print("ОТЧЕТ ПО КАТАЛОГУ")
     print(f"Средний рейтинг: {avg_rating}")
     print(f"Средний возраст фильмов: {avg_age} лет")
-    print(f"257 минут: {duration_in_hours(257)}")
+    print()
+
+    print("Проверка rating_tier:")
+    for test_rating in (9.0, 7.0, 5.0, 4.9):
+        print(f"{test_rating}: {rating_tier(test_rating)}")
+
+    print("Проверка decade_label:")
+    for test_year in (2014, 2015, 2020, 2021):
+        print(f"{test_year}: {decade_label(test_year)}")
+    
 
 if __name__ == "__main__":
     build_report(movies)
