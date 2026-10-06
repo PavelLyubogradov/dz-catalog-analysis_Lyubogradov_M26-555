@@ -129,9 +129,6 @@ def decade_label(year: int) -> str:
 def non_comedy_titles(movies: list[dict], genre: str = "comedy") -> list[str]:
     """Return the titles of movies that do NOT belong to the given genre.
 
-    The match against each movie's genres is case-insensitive, so
-    genre="Comedy" and genre="comedy" behave the same.
-
     Args:
         movies: The catalog of movies.
         genre: The genre to exclude.
@@ -149,9 +146,6 @@ def non_comedy_titles(movies: list[dict], genre: str = "comedy") -> list[str]:
 
 def find_first_masterpiece(movies: list[dict], threshold: float = 9.0) -> str:
     """Find the first movie in catalog order rated above threshold.
-
-    Uses a while loop with break; the loop's else clause runs only when
-    no break occurred, i.e. no qualifying movie was found.
 
     Args:
         movies: The catalog of movies, searched in order.
@@ -188,6 +182,56 @@ def count_long_movies(movies: list[dict], threshold: int = 120) -> int:
         if movie["duration_min"] > threshold:
             count += 1
     return count
+
+
+def normalize_title(title: str) -> str:
+    """Convert a title to Title Case.
+
+    Args:
+        title: A movie title in any casing.
+
+    Returns:
+        The title with each word's first letter capitalized and the rest
+        lowercased, built by splitting on spaces and normalizing each word.
+    """
+    words = title.strip().split()
+    capitalized_words = [
+        word[:1].upper() + word[1:].lower() if word else word for word in words
+    ]
+    return " ".join(capitalized_words)
+
+
+def make_slug(title: str) -> str:
+    """Turn a normalized title into a URL-friendly slug.
+ 
+    Args:
+        title: A (typically already normalized) movie title.
+ 
+    Returns:
+        The title lowercased with spaces replaced by hyphens, e.g.
+        "the-quiet-algorithm".
+    """
+    return title.lower().replace(" ", "-")
+
+
+def format_report_line(movie: dict) -> str:
+    """Format a single movie as one human-readable report line.
+ 
+    Args:
+        movie: A movie dict from the catalog.
+ 
+    Returns:
+        A string like '"The Quiet Algorithm" (2024) — 9.2/10, 1ч 58м,
+        жанры: drama, sci-fi', with the title normalized and genres
+        sorted alphabetically.
+    """
+    title = normalize_title(movie["title"])
+    duration = duration_in_hours(movie["duration_min"])
+    genres = ", ".join(sorted(movie["genres"]))
+    return (
+        f'"{title}" ({movie["year"]}) — '
+        f'{movie["rating"]}/10, {duration}, жанры: {genres}'
+    )
 
 
 def build_report(movies: list[dict]) -> None:
@@ -229,6 +273,22 @@ def build_report(movies: list[dict]) -> None:
 
     print(f"Первый шедевр: {find_first_masterpiece(movies)}")
     print(f"Фильмов длиннее 120 минут: {count_long_movies(movies)}")
+    print()
+
+    print("Нормализованные названия:")
+    for movie in movies:
+        print(f"  {normalize_title(movie['title'])}")
+    print()
+
+    print("Итоговый список Slugs:")
+    for movie in movies:
+        slug = make_slug(normalize_title(movie["title"]))
+        print(f"  {slug}")
+    print()  
+
+    print("Форматированные строки:")
+    for movie in movies:
+        print(f"  {format_report_line(movie)}")
     print()
 
 
