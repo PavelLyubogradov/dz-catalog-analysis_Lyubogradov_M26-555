@@ -38,7 +38,6 @@ def average_rating(movies: list[dict]) -> float:
     """
     if not movies:
         return 0.0
-
     return round(sum(movie["rating"] for movie in movies) / len(movies), 1)
 
 
@@ -56,7 +55,6 @@ def catalog_age_stats(
         average_age is rounded up with math.ceil.
         Returns (0, 0, 0) when the catalog is empty.
     """
-
     if not movies:
         return 0, 0, 0
 
@@ -67,10 +65,8 @@ def catalog_age_stats(
         current_age = current_year - movie["year"]
         oldest_age = current_age if current_age > oldest_age else oldest_age
         newest_age = current_age if current_age < newest_age else newest_age        
-
         sum_ages += current_age
     average_age = math.ceil(sum_ages / len(movies))
-
     return oldest_age, newest_age, average_age
 
 
@@ -140,7 +136,6 @@ def non_comedy_titles(movies: list[dict], genre: str = "comedy") -> list[str]:
         if normalized_genre in genres:
             continue
         result.append(movie["title"])
-
     return result
 
 
@@ -163,7 +158,6 @@ def find_first_masterpiece(movies: list[dict], threshold: float = 9.0) -> str:
         index += 1
     else:
         result =  "Шедевров не найдено"
-
     return result
 
 def count_long_movies(movies: list[dict], threshold: int = 120) -> int:
@@ -233,6 +227,31 @@ def format_report_line(movie: dict) -> str:
         f'{movie["rating"]}/10, {duration}, жанры: {genres}'
     )
 
+def titles_sorted_by_rating(movies: list[dict]) -> list[str]:
+    """Movie titles sorted by rating, highest first.
+ 
+    Args:
+        movies: The catalog of movies. Not modified.
+ 
+    Returns:
+        A new list of titles, sorted by descending rating.
+    """
+    sorted_movies = sorted(movies, key=lambda movie: movie["rating"], reverse=True)
+    return [movie["title"] for movie in sorted_movies]
+
+
+def top_n_by_rating(movies: list[dict], n: int = 3) -> list[tuple[str, float]]:
+    """The top n movies by rating, as (title, rating) tuples.
+ 
+    Args:
+        movies: The catalog of movies.
+        n: How many top movies to return.
+ 
+    Returns:
+        A list of (title, rating) tuples, highest rating first.
+    """
+    sorted_movies = sorted(movies, key=lambda movie: movie["rating"], reverse=True)
+    return [(movie["title"], movie["rating"]) for movie in sorted_movies[:n]]
 
 def build_report(movies: list[dict]) -> None:
     """Print the full console report for the movie catalog.
@@ -284,13 +303,22 @@ def build_report(movies: list[dict]) -> None:
     for movie in movies:
         slug = make_slug(normalize_title(movie["title"]))
         print(f"  {slug}")
-    print()  
+    print()
 
     print("Форматированные строки:")
     for movie in movies:
         print(f"  {format_report_line(movie)}")
     print()
 
+    print("Фильмы, отсортированные по рейтингу:")
+    for title in titles_sorted_by_rating(movies):
+        print(f"  - {title}")
+    print()
+
+    print("Топ-3 фильмов по рейтингу:")
+    for title, rating in top_n_by_rating(movies):
+        print(f"  - {title}: {rating}")
+    print()
 
 if __name__ == "__main__":
     build_report(movies)
