@@ -26,6 +26,10 @@ movies = [
 ]
 
 
+# =============================================================================
+# Stage 1. Warm-up: variables, numbers, math
+# =============================================================================
+
 def average_rating(movies: list[dict]) -> float:
     """Average rating across the catalog, rounded to one decimal place.
 
@@ -85,6 +89,10 @@ def duration_in_hours(minutes: int) -> str:
     return f"{hours}ч {leftover_minutes}м"
 
 
+# =============================================================================
+# Stage 2. Conditionals and match
+# =============================================================================
+
 def rating_tier(rating: float) -> str:
     """Return the Russian tier label for a movie rating.
  
@@ -121,6 +129,10 @@ def decade_label(year: int) -> str:
         case _:
             return "старые"
 
+
+# =============================================================================
+# Stage 3. Loops
+# =============================================================================
 
 def non_comedy_titles(movies: list[dict], genre: str = "comedy") -> list[str]:
     """Return the titles of movies that do NOT belong to the given genre.
@@ -178,6 +190,10 @@ def count_long_movies(movies: list[dict], threshold: int = 120) -> int:
     return count
 
 
+# =============================================================================
+# Stage 4. Strings
+# =============================================================================
+
 def normalize_title(title: str) -> str:
     """Convert a title to Title Case.
 
@@ -227,6 +243,11 @@ def format_report_line(movie: dict) -> str:
         f'{movie["rating"]}/10, {duration}, жанры: {genres}'
     )
 
+
+# =============================================================================
+# Stage 5. Lists
+# =============================================================================
+
 def titles_sorted_by_rating(movies: list[dict]) -> list[str]:
     """Movie titles sorted by rating, highest first.
  
@@ -252,6 +273,74 @@ def top_n_by_rating(movies: list[dict], n: int = 3) -> list[tuple[str, float]]:
     """
     sorted_movies = sorted(movies, key=lambda movie: movie["rating"], reverse=True)
     return [(movie["title"], movie["rating"]) for movie in sorted_movies[:n]]
+
+
+# =============================================================================
+# Stage 6. Dictionaries
+# =============================================================================
+
+def count_by_genre(movies: list[dict]) -> dict[str, int]:
+    """Count how many movies belong to each genre.
+ 
+    Args:
+        movies: The catalog of movies.
+ 
+    Returns:
+        A dict mapping each genre to the number of movies that include
+        it, built manually with dict.get() (no collections.Counter).
+    """
+    counts: dict[str, int] = {}
+    for movie in movies:
+        for genre in movie["genres"]:
+            counts[genre] = counts.get(genre, 0) + 1
+    return counts
+
+
+def actor_filmography(movies: list[dict]) -> dict[str, list[str]]:
+    """Build a mapping of each actor to the titles they appear in.
+ 
+    Args:
+        movies: The catalog of movies.
+ 
+    Returns:
+        A dict mapping each actor's name to a list of movie titles.
+    """
+    filmography: dict[str, list[str]] = {}
+    for movie in movies:
+        for actor in movie["actors"]:
+            filmography.setdefault(actor, []).append(movie["title"])
+    return filmography
+
+
+def above_average_ratings(movies: list[dict]) -> dict[str, float]:
+    """Titles and ratings for movies rated above the catalog average.
+ 
+    Args:
+        movies: The catalog of movies.
+ 
+    Returns:
+        A dict of {title: rating}, built with a dict comprehension,
+        containing only movies whose rating exceeds average_rating().
+    """
+    avg = average_rating(movies)
+    return {
+        movie["title"]: movie["rating"] for movie in movies if movie["rating"] > avg
+    }
+
+
+# =============================================================================
+# Stage 7. Sets  -- NOT YET IMPLEMENTED
+# =============================================================================
+
+
+# =============================================================================
+# Stage 8. Iterators and generators  -- NOT YET IMPLEMENTED
+# =============================================================================
+
+
+# =============================================================================
+# Stage 9. Final report
+# =============================================================================
 
 def build_report(movies: list[dict]) -> None:
     """Print the full console report for the movie catalog.
