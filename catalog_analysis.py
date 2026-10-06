@@ -66,7 +66,8 @@ def catalog_age_stats(
     for movie in movies[1:]:
         current_age = current_year - movie["year"]
         oldest_age = current_age if current_age > oldest_age else oldest_age
-        newest_age = current_age if current_age < newest_age else newest_age
+        newest_age = current_age if current_age < newest_age else newest_age        
+
         sum_ages += current_age
     average_age = math.ceil(sum_ages / len(movies))
 
@@ -87,6 +88,7 @@ def duration_in_hours(minutes: int) -> str:
     leftover_minutes = minutes % 60
     return f"{hours}ч {leftover_minutes}м"
 
+
 def rating_tier(rating: float) -> str:
     """Return the Russian tier label for a movie rating.
  
@@ -103,8 +105,8 @@ def rating_tier(rating: float) -> str:
         return "хорошо" if rating >= 7 else "средне" 
     else:
         return "слабо"
- 
- 
+
+
 def decade_label(year: int) -> str:
     """Classify a release year as new, recent, or old.
  
@@ -122,7 +124,71 @@ def decade_label(year: int) -> str:
             return "недавние"
         case _:
             return "старые"
+
+
+def non_comedy_titles(movies: list[dict], genre: str = "comedy") -> list[str]:
+    """Return the titles of movies that do NOT belong to the given genre.
+
+    The match against each movie's genres is case-insensitive, so
+    genre="Comedy" and genre="comedy" behave the same.
+
+    Args:
+        movies: The catalog of movies.
+        genre: The genre to exclude.
+    """
+    normalized_genre = genre.lower()
+    result = []
+    for movie in movies:
+        genres = {genre_name.lower() for genre_name in movie["genres"]}
+        if normalized_genre in genres:
+            continue
+        result.append(movie["title"])
+
+    return result
+
+
+def find_first_masterpiece(movies: list[dict], threshold: float = 9.0) -> str:
+    """Find the first movie in catalog order rated above threshold.
+
+    Uses a while loop with break; the loop's else clause runs only when
+    no break occurred, i.e. no qualifying movie was found.
+
+    Args:
+        movies: The catalog of movies, searched in order.
+        threshold: The rating a movie must exceed to qualify.
+
+    Returns:
+        The first matching movie title, or a message if none qualifies.
+    """
+    index = 0
+    while index < len(movies):
+        current_movie = movies[index]
+        if current_movie["rating"] > threshold:
+            result = current_movie["title"]
+            break
+        index += 1
+    else:
+        result =  "Шедевров не найдено"
+
+    return result
+
+def count_long_movies(movies: list[dict], threshold: int = 120) -> int:
+    """Count movies longer than threshold minutes.
  
+    Args:
+        movies: The catalog of movies.
+        threshold: Minimum duration, in minutes, to count a movie.
+ 
+    Returns:
+        The number of movies with duration_min > threshold, accumulated
+        in a loop (deliberately not via sum() over a filtered list).
+    """
+    count = 0
+    for movie in movies:
+        if movie["duration_min"] > threshold:
+            count += 1
+    return count
+
 
 def build_report(movies: list[dict]) -> None:
     """Print the full console report for the movie catalog.
@@ -131,21 +197,40 @@ def build_report(movies: list[dict]) -> None:
         movies: The catalog of movies to report on.
     """
     avg_rating = average_rating(movies)
-    _, _, avg_age = catalog_age_stats(movies)
-
+    oldest_age, newest_age, avg_age = catalog_age_stats(movies)
+    print()
     print("ОТЧЕТ ПО КАТАЛОГУ")
+    print()
     print(f"Средний рейтинг: {avg_rating}")
+    print(f"Возраст самого старого фильма: {oldest_age} лет")
+    print(f"Возраст самого нового фильма: {newest_age} лет")
     print(f"Средний возраст фильмов: {avg_age} лет")
     print()
 
-    print("Проверка rating_tier:")
-    for test_rating in (9.0, 7.0, 5.0, 4.9):
-        print(f"{test_rating}: {rating_tier(test_rating)}")
+    rating_tiers = ("шедевр", "хорошо", "средне", "слабо")
+    print("Фильмов по рейтинговым категориям:")
+    for tier in rating_tiers:
+        count = sum(rating_tier(movie["rating"]) == tier for movie in movies)
+        print(f"  {tier} — {count}")
+    print()
 
-    print("Проверка decade_label:")
-    for test_year in (2014, 2015, 2020, 2021):
-        print(f"{test_year}: {decade_label(test_year)}")
-    
+    period_labels = ("новые", "недавние", "старые")
+    print("Фильмов по периодам выхода:")
+    for label in period_labels:
+        count = sum(decade_label(movie["year"]) == label for movie in movies)
+        print(f"  {label} — {count}")
+    print()
+
+    comedy = "comedy"
+    print(f"Фильмы без жанра \"{comedy}\":")
+    for title in non_comedy_titles(movies, comedy):
+        print(f"  - {title}")
+    print()
+
+    print(f"Первый шедевр: {find_first_masterpiece(movies)}")
+    print(f"Фильмов длиннее 120 минут: {count_long_movies(movies)}")
+    print()
+
 
 if __name__ == "__main__":
     build_report(movies)
