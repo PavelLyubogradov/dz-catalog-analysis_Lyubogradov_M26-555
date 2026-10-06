@@ -329,14 +329,93 @@ def above_average_ratings(movies: list[dict]) -> dict[str, float]:
 
 
 # =============================================================================
-# Stage 7. Sets  -- NOT YET IMPLEMENTED
+# Stage 7. Sets
 # =============================================================================
+
+def all_genres(movies: list[dict]) -> set[str]:
+    """All unique genres present anywhere in the catalog.
+ 
+    Args:
+        movies: The catalog of movies.
+ 
+    Returns:
+        The union of every movie's genre set.
+    """
+    genres: set[str] = set()
+    for movie in movies:
+        genres.update(movie["genres"])
+    return genres
+ 
+ 
+def common_actors(movie1: dict, movie2: dict) -> set[str]:
+    """Actors who appear in both movies.
+ 
+    Args:
+        movie1: The first movie.
+        movie2: The second movie.
+ 
+    Returns:
+        The intersection of the two movies' actor sets.
+    """
+    return set(movie1["actors"]) & set(movie2["actors"])
+ 
+ 
+def genres_only_in_one(movies_a: list[dict], movies_b: list[dict]) -> set[str]:
+    """Genres present in movies_a but not in movies_b.
+ 
+    Args:
+        movies_a: A catalog (or slice of one) of movies.
+        movies_b: Another catalog (or slice) to compare against.
+ 
+    Returns:
+        The set difference: all_genres(movies_a) - all_genres(movies_b).
+    """
+    return all_genres(movies_a) - all_genres(movies_b)
 
 
 # =============================================================================
-# Stage 8. Iterators and generators  -- NOT YET IMPLEMENTED
+# Stage 8. Iterators and generators
 # =============================================================================
 
+def iter_high_rated(movies: list[dict], min_rating: float = 8.0):
+    """Yields movies rated at least min_rating.
+ 
+    Args:
+        movies: The catalog of movies.
+        min_rating: The minimum rating a movie must have to be yielded.
+ 
+    Yields:
+        Each movie dict with rating >= min_rating, in catalog order.
+    """
+    for movie in movies:
+        if movie["rating"] >= min_rating:
+            yield movie
+
+
+def demo_iter_high_rated(movies: list[dict]) -> None:
+    """Print a report line for every movie from iter_high_rated().
+ 
+    Args:
+        movies: The catalog of movies.
+    """
+    for movie in iter_high_rated(movies):
+        print(format_report_line(movie))
+
+
+def total_duration_above(movies: list[dict], min_rating: float = 7.0) -> int:
+    """Total runtime, in minutes, of movies rated above min_rating.
+ 
+    Args:
+        movies: The catalog of movies.
+        min_rating: The rating threshold a movie must exceed.
+ 
+    Returns:
+        The sum of duration_min for qualifying movies, computed with
+        sum() over a generator expression (not a list comprehension).
+    """
+    return sum(
+        movie["duration_min"] for movie in movies if movie["rating"] > min_rating
+    )
 
 # =============================================================================
 # Stage 9. Final report
@@ -407,6 +486,48 @@ def build_report(movies: list[dict]) -> None:
     print("Топ-3 фильмов по рейтингу:")
     for title, rating in top_n_by_rating(movies):
         print(f"  - {title}: {rating}")
+    print()
+
+    print("Количество фильмов по жанрам:")
+    for genre, count in sorted(count_by_genre(movies).items()):
+        print(f"  - {genre}: {count}")
+    print()
+
+    print("Фильмография актеров:")
+    for actor, titles in sorted(actor_filmography(movies).items()):
+        titles_str = ", ".join(titles)
+        print(f"  - {actor}: {titles_str}")
+    print()
+
+    print("Фильмы выше среднего рейтинга:")
+    for title, rating in sorted(above_average_ratings(movies).items()):
+        print(f"  - {title}: {rating}")
+    print()
+
+    print("Все жанры в каталоге:")
+    for genre in sorted(all_genres(movies)):
+        print(f"  - {genre}")
+    print()
+
+    print("Общие актеры у первых двух фильмов:")
+    first_movie = movies[0]
+    second_movie = movies[1]
+    for actor in sorted(common_actors(first_movie, second_movie)):
+        print(f"  - {actor}")
+    print()
+
+    print("Жанры, которые есть только в первом наборе:")
+    for genre in sorted(genres_only_in_one(movies[:5], movies[5:])):
+        print(f"  - {genre}")
+    print()
+
+    print("Фильмы с рейтингом не ниже 8.0:")
+    for movie in iter_high_rated(movies, min_rating=8.0):
+        print(f"  - {movie['title']}: {movie['rating']}")
+    print()
+
+    print("Общая длительность фильмов с рейтингом выше 7.0:")
+    print(f"  {total_duration_above(movies, min_rating=7.0)} минут")
     print()
 
 if __name__ == "__main__":
