@@ -417,118 +417,47 @@ def total_duration_above(movies: list[dict], min_rating: float = 7.0) -> int:
         movie["duration_min"] for movie in movies if movie["rating"] > min_rating
     )
 
+
 # =============================================================================
 # Stage 9. Final report
 # =============================================================================
 
 def build_report(movies: list[dict]) -> None:
     """Print the full console report for the movie catalog.
-
+ 
+    The single entry point: one call reproduces the entire report --
+    overall stats, the top 3 movies, a genre breakdown, and the full
+    list of unique genres.
+ 
     Args:
         movies: The catalog of movies to report on.
     """
     avg_rating = average_rating(movies)
-    oldest_age, newest_age, avg_age = catalog_age_stats(movies)
-    print()
+    _, _, avg_age = catalog_age_stats(movies)
+
     print("ОТЧЕТ ПО КАТАЛОГУ")
-    print()
     print(f"Средний рейтинг: {avg_rating}")
-    print(f"Возраст самого старого фильма: {oldest_age} лет")
-    print(f"Возраст самого нового фильма: {newest_age} лет")
     print(f"Средний возраст фильмов: {avg_age} лет")
     print()
 
-    rating_tiers = ("шедевр", "хорошо", "средне", "слабо")
-    print("Фильмов по рейтинговым категориям:")
-    for tier in rating_tiers:
-        count = sum(rating_tier(movie["rating"]) == tier for movie in movies)
-        print(f"  {tier} — {count}")
-    print()
-
-    period_labels = ("новые", "недавние", "старые")
-    print("Фильмов по периодам выхода:")
-    for label in period_labels:
-        count = sum(decade_label(movie["year"]) == label for movie in movies)
-        print(f"  {label} — {count}")
-    print()
-
-    comedy = "comedy"
-    print(f"Фильмы без жанра \"{comedy}\":")
-    for title in non_comedy_titles(movies, comedy):
-        print(f"  - {title}")
-    print()
-
-    print(f"Первый шедевр: {find_first_masterpiece(movies)}")
-    print(f"Фильмов длиннее 120 минут: {count_long_movies(movies)}")
-    print()
-
-    print("Нормализованные названия:")
-    for movie in movies:
-        print(f"  {normalize_title(movie['title'])}")
-    print()
-
-    print("Итоговый список Slugs:")
-    for movie in movies:
-        slug = make_slug(normalize_title(movie["title"]))
-        print(f"  {slug}")
-    print()
-
-    print("Форматированные строки:")
-    for movie in movies:
+    print("Топ-3 фильма:")
+    top_movies = sorted(movies, key=lambda movie: movie["rating"], reverse=True)[:3]
+    for movie in top_movies:
         print(f"  {format_report_line(movie)}")
     print()
 
-    print("Фильмы, отсортированные по рейтингу:")
-    for title in titles_sorted_by_rating(movies):
-        print(f"  - {title}")
+    print("Фильмов по жанрам:")
+    genre_counts = count_by_genre(movies)
+    ranked_genres = sorted(
+        genre_counts.items(), key=lambda item: (-item[1], item[0])
+    )
+    for genre, count in ranked_genres:
+        print(f"  {genre} — {count}")
     print()
 
-    print("Топ-3 фильмов по рейтингу:")
-    for title, rating in top_n_by_rating(movies):
-        print(f"  - {title}: {rating}")
+    print("Все жанры каталога:", ", ".join(sorted(all_genres(movies))))
     print()
 
-    print("Количество фильмов по жанрам:")
-    for genre, count in sorted(count_by_genre(movies).items()):
-        print(f"  - {genre}: {count}")
-    print()
-
-    print("Фильмография актеров:")
-    for actor, titles in sorted(actor_filmography(movies).items()):
-        titles_str = ", ".join(titles)
-        print(f"  - {actor}: {titles_str}")
-    print()
-
-    print("Фильмы выше среднего рейтинга:")
-    for title, rating in sorted(above_average_ratings(movies).items()):
-        print(f"  - {title}: {rating}")
-    print()
-
-    print("Все жанры в каталоге:")
-    for genre in sorted(all_genres(movies)):
-        print(f"  - {genre}")
-    print()
-
-    print("Общие актеры у первых двух фильмов:")
-    first_movie = movies[0]
-    second_movie = movies[1]
-    for actor in sorted(common_actors(first_movie, second_movie)):
-        print(f"  - {actor}")
-    print()
-
-    print("Жанры, которые есть только в первом наборе:")
-    for genre in sorted(genres_only_in_one(movies[:5], movies[5:])):
-        print(f"  - {genre}")
-    print()
-
-    print("Фильмы с рейтингом не ниже 8.0:")
-    for movie in iter_high_rated(movies, min_rating=8.0):
-        print(f"  - {movie['title']}: {movie['rating']}")
-    print()
-
-    print("Общая длительность фильмов с рейтингом выше 7.0:")
-    print(f"  {total_duration_above(movies, min_rating=7.0)} минут")
-    print()
 
 if __name__ == "__main__":
     build_report(movies)
